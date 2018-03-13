@@ -5,6 +5,7 @@ import requests
 import sys
 import time
 import xml.etree.ElementTree as etree
+from distutils.util import strtobool
 
 
 def get_projects(client):
@@ -26,6 +27,7 @@ def search_history(client, project, job_filter=None, offset=0, hmax=0):
         request += '&jobFilter=' + job_filter
 
     res = client.get(request)
+    res.raise_for_status()
     return etree.fromstring(res.text)
 
 
@@ -122,9 +124,15 @@ class Client():
         logging.info("Purge {} entries: {}".format(len(ids), ids))
         if not dry_run:
             res = self.post('executions/delete', data={"ids": ids})
-
-        return len(ids)
-
+            fs = etree.fromstring(res.text)
+            count = int(fs.find('./successful').get("count"))
+            allsuccessful = strtobool(fs.get('allsuccessful'))
+            if allsuccessful:
+                return count
+            messages = set([x.get("message") for x in fs.findall('.//execution')])
+            # error example: {'Unauthorized: Delete execution in project xxx'}
+            logging.error("error-messages:{} ".format(messages))
+        return count
 
 if __name__ == '__main__':
     args = parse_args()
