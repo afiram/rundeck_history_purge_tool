@@ -122,6 +122,7 @@ class Client():
 
     def delete_executions(self, ids, dry_run=False):
         logging.info("Purge {} entries: {}".format(len(ids), ids))
+        count = 0
         if not dry_run:
             res = self.post('executions/delete', data={"ids": ids})
             fs = etree.fromstring(res.text)
