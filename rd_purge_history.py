@@ -128,11 +128,11 @@ class Client():
             fs = etree.fromstring(res.text)
             count = int(fs.find('./successful').get("count"))
             allsuccessful = strtobool(fs.get('allsuccessful'))
-            if allsuccessful:
-                return count
-            messages = set([x.get("message") for x in fs.findall('.//execution')])
-            # error example: {'Unauthorized: Delete execution in project xxx'}
-            logging.error("error-messages:{} ".format(messages))
+            if not allsuccessful:
+                messages = set([x.get("message") for x in fs.findall('.//execution')])
+                # error example: {'Unauthorized: Delete execution in project xxx'}
+                logging.error("!! error-messages:{} :{}".format(messages,res.text))
+        logging.info("delete_executions:delete-count:{}".format(count))
         return count
 
 if __name__ == '__main__':
